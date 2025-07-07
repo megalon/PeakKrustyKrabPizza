@@ -2,9 +2,18 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <AssemblyName>peak-krusty-krab-pizza</AssemblyName>
+    <AssemblyName>com.github.megalon.peak-krusty-krab-pizza</AssemblyName>
     <AssemblyTitle>PeakKrustyKrabPizza</AssemblyTitle>
     <Version>0.1.0</Version>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="com.github.PEAKModding.PEAKLib.Core">
+      <HintPath>..\..\..\..\libs\com.github.PEAKModding.PEAKLib.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="com.github.PEAKModding.PEAKLib.Items">
+      <HintPath>..\..\..\..\libs\com.github.PEAKModding.PEAKLib.Items.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>
