@@ -50,7 +50,6 @@ public partial class Plugin : BaseUnityPlugin
 
         if (newScene.name.ToLower().StartsWith("level_") || newScene.name == "WilIsland")
         {
-            TryInstantiate("Krusty Krab Pizza.prefab");
             TryInstantiate("Krusty Krab Pizza");
         }
     }
@@ -59,7 +58,7 @@ public partial class Plugin : BaseUnityPlugin
     {
         try
         {
-            Item component = PhotonNetwork.InstantiateItemRoom(name, new Vector3(14.4139996f, 1.77900004f, -382.032013f), Quaternion.identity).GetComponent<Item>();
+            Item component = PhotonNetwork.InstantiateItemRoom($"{Info.Metadata.GUID}:{name}", new Vector3(14.4139996f, 1.77900004f, -382.032013f), Quaternion.identity).GetComponent<Item>();
             component.ForceSyncForFrames();
             if (component != null)
             {
