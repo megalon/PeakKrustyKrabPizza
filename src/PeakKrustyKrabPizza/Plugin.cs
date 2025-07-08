@@ -4,7 +4,6 @@ using HarmonyLib;
 using PEAKLib.Core;
 using PEAKLib.Items;
 using Photon.Pun;
-using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -14,13 +13,13 @@ namespace PeakKrustyKrabPizza;
 [BepInAutoPlugin]
 [BepInDependency("com.github.PEAKModding.PEAKLib.Core", BepInDependency.DependencyFlags.HardDependency)]
 [BepInDependency("com.github.PEAKModding.PEAKLib.Items", BepInDependency.DependencyFlags.HardDependency)]
+[BepInDependency("com.quackandcheese.SkinnedMeshRendererItemFix", BepInDependency.DependencyFlags.HardDependency)]
 public partial class Plugin : BaseUnityPlugin
 {
     public static Plugin Instance { get; private set; } = null!;
     internal static ManualLogSource Log { get; private set; } = null!;
     internal static Harmony? Harmony { get; set; }
     internal static AssetBundle Bundle { get; set; } = null!;
-    internal static GameObject PizzaPrefab { get; set; } = null!;
     internal static ModDefinition Definition { get; set; } = null!;
 
     private void Awake()
@@ -33,15 +32,14 @@ public partial class Plugin : BaseUnityPlugin
 
         Bundle = AssetBundle.LoadFromFile(AssetBundlePath);
 
-        PizzaPrefab = Bundle.LoadAsset<GameObject>("Krusty Krab Pizza.prefab");
-
-        Item pizza = PizzaPrefab.GetComponent<Item>();
+        Item pizza = Bundle.LoadAsset<GameObject>("Krusty Krab Pizza.prefab").GetComponent<Item>();
         new ItemContent(pizza).Register(Definition);
 
-        // Log our awake here so we can see it in LogOutput.log file
         Log.LogInfo($"Plugin {Name} is loaded!");
 
         SceneManager.activeSceneChanged += OnActiveSceneChanged;
+
+        Harmony.CreateAndPatchAll(typeof(Plugin));
     }
 
     private void OnActiveSceneChanged(Scene oldScene, Scene newScene)
@@ -58,8 +56,9 @@ public partial class Plugin : BaseUnityPlugin
     {
         try
         {
-            Item component = PhotonNetwork.InstantiateItemRoom($"{Info.Metadata.GUID}:{name}", new Vector3(14.4139996f, 1.77900004f, -382.032013f), Quaternion.identity).GetComponent<Item>();
+            Item component = PhotonNetwork.InstantiateItemRoom($"{Definition.Id}:{name}", new Vector3(14.4139996f, 1.77900004f, -382.032013f), Quaternion.identity).GetComponent<Item>();
             component.ForceSyncForFrames();
+
             if (component != null)
             {
                 component.GetComponent<PhotonView>().RPC("SetKinematicRPC", RpcTarget.AllBuffered, true, component.transform.position, component.transform.rotation);
@@ -68,5 +67,20 @@ public partial class Plugin : BaseUnityPlugin
         {
             Debug.LogException(e);
         }
+    }
+
+    [HarmonyPatch(typeof(Lantern), "Update")]
+    [HarmonyPrefix]
+    static bool Lantern_Update(Lantern __instance)
+    {
+        if (!__instance.gameObject.name.ToLowerInvariant().Contains("krusty krab pizza")) return true;
+
+        if (__instance.lanternLight.gameObject.activeSelf != __instance.lit)
+        {
+            Log.LogInfo("Setting blendshape");
+            __instance.GetComponentInChildren<SkinnedMeshRenderer>().SetBlendShapeWeight(0, __instance.lit ? 100f : 0f);
+        }
+
+        return true;
     }
 }
